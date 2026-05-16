@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Todo App</title>
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-3">
+
+    <!-- ================= NAVBAR ================= -->
+    <nav class="navbar navbar-expand-lg bg-info text-dark px-4">
+
+        <a class="navbar-brand fw-bold" href="#">TaskApp</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">All Tasks</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Collaborations</a>
+                </li>
+            </ul>
+
+            <div class="ms-auto">
+
+                {% if user.is_authenticated %}
+
+                <div class="dropdown">
+
+                    <button class="btn p-0 border-0" data-bs-toggle="dropdown">
+
+                        {% if user.userprofile.profile_picture %}
+                        <img src="{{ user.userprofile.profile_picture.url }}" width="40" height="40"
+                             class="rounded-circle object-fit-cover">
+                        {% else %}
+                        <img src="/media/default.png" width="40" height="40"
+                             class="rounded-circle object-fit-cover">
+                        {% endif %}
+
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+
+                        <li><a class="dropdown-item" href="{% url 'update_profile' %}">My Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'update_profile' %}">Edit Profile</a></li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button class="btn btn-danger w-50" style="margin-left:8px;">Logout</button>
+                            </form>
+                        </li>
+
+                    </ul>
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+    </nav>
+
+
+    <!-- ================= TASK FORM ================= -->
+    <h5 class="mt-4">Create a Task</h5>
+
+    <div class="card mb-4 bg-light">
+
+        <div class="card-body">
+
+            <form method="POST" action="{% url 'create_task' %}">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    {{ form.title.label_tag }}
+                    {{ form.title }}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add Task</button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= TASK TABLE ================= -->
+    <div class="card p-3">
+
+        <h5 class="mb-3">List of Tasks</h5>
+
+        <!-- HEADINGS -->
+        <div class="row bg-info text-white p-2 fw-bold text-center">
+            <div class="col-md-4">Task</div>
+            <div class="col-md-2">Status</div>
+            <div class="col-md-3">Assign</div>
+            <div class="col-md-3">Actions</div>
+        </div>
+
+        <!-- TASK LOOP -->
+        {% for task in tasks %}
+
+        <div class="row align-items-center text-center border-bottom py-2">
+
+            <!-- TASK -->
+            <div class="col-md-4 text-start">
+                <strong>{{ task.title }}</strong><br>
+                <small class="text-muted">Added by: {{ task.created_by }}</small>
+            </div>
+
+            <!-- STATUS -->
+            <div class="col-md-2">
+
+                {% if request.user == task.created_by or user.is_superuser or request.user in task.assigned_to.all %}
+
+                <form method="POST" action="{% url 'update_task' task.id %}">
+                    {% csrf_token %}
+
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+
+                        <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="rejected" {% if task.status == 'rejected' %}selected{% endif %}>Rejected</option>
+
+                    </select>
+
+                </form>
+
+                {% else %}
+
+                    {% if task.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% elif task.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                    {% elif task.status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% endif %}
+
+                {% endif %}
+
+            </div>
+
+            <!-- ASSIGN -->
+            <div class="col-md-3">
+
+                {% if request.user == task.created_by or user.is_superuser %}
+
+                <form method="POST" action="{% url 'assign_task' task.id %}">
+                    {% csrf_token %}
+
+                    <select name="assigned_user" class="form-select form-select-sm" onchange="this.form.submit()">
+
+                        <option value="">Assign User</option>
+
+                        {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.username }}</option>
+                        {% endfor %}
+
+                    </select>
+
+                </form>
+
+                {% else %}
+
+                    <small class="text-muted">
+                        {% for u in task.assigned_to.all %}
+                            {{ u.username }}
+                        {% empty %}
+                            Not assigned
+                        {% endfor %}
+                    </small>
+
+                {% endif %}
+
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="col-md-3">
+
+                {% if request.user == task.created_by or user.is_superuser %}
+
+                <button class="btn btn-sm btn-info" onclick="toggleEdit({{ task.id }})">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+
+                <form method="POST" action="{% url 'delete_task' task.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- EDIT FORM -->
+        <div id="edit-form-{{ task.id }}" class="row p-2" style="display:none;">
+            <form method="POST" action="{% url 'edit_task' task.id %}" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="text" name="title" value="{{ task.title }}" class="form-control">
+                <button class="btn btn-success">Save</button>
+            </form>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+<!-- JS -->
+<script>
+function toggleEdit(taskId) {
+    const form = document.getElementById(`edit-form-${taskId}`);
+    form.style.display = form.style.display === "none" ? "block" : "none";
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
