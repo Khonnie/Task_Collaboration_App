@@ -8,15 +8,14 @@ class Task(models.Model):
         ('completed', 'Completed'),
         ('rejected', 'Rejected'),
     ]
-    # Each task belongs to ONE user
+    
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_tasks",default=1)
+    
     assigned_to = models.ManyToManyField(User, related_name='assigned_tasks')
 
-    # The actual task text
     title = models.CharField(max_length=255)
 
-    # Status of the task
-    # completed = models.BooleanField(default=False)
+    # Status of the task # completed = models.BooleanField(default=False)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
 
     # Timestamp when task is created
@@ -31,6 +30,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15)
     profile_picture = models.ImageField(upload_to='profile_pics', null=True, blank=True)
-
+    
     def __str__(self):
         return self.user.username

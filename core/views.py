@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from .models import Task, UserProfile
-from .forms import TaskForm, UserProfileForm
+from .forms import TaskForm, UserProfileForm, UserForm
 from django.contrib.auth.models import User
 
 # Create your views here.
@@ -30,7 +30,7 @@ def task_access(user, task):
     return (
         user.is_superuser or
         task.created_by == user or
-        user in task.assignees.all()
+        user in task.assigned_to.all()
     )
 
 
@@ -59,8 +59,8 @@ def create_task(request):
 @login_required
 def update_task(request, task_id):
     
-    # task = get_object_or_404(Task, id=task_id)
-    task = Task.objects.get(id=task_id)
+    task = get_object_or_404(Task, id=task_id)
+    # task = Task.objects.get(id=task_id)
 
     # Authorization check # only update your task.
     # if task.user != request.user and not request.user.is_superuser:
@@ -83,7 +83,7 @@ def update_task(request, task_id):
 @login_required
 def edit_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    task = Task.objects.get(id=task_id)
+    # task = Task.objects.get(id=task_id)
 
    # edit permission check, edit by only owner or superadmin
     if not task_access(request.user, task):
@@ -111,20 +111,49 @@ def delete_task(request, task_id):
 
     return redirect('task_list')
 
+# @login_required
+# def update_profile(request):
+#     profile = request.user.userprofile
+#     if request.method == 'POST':
+#         form = UserProfileForm(request.POST, request.FILES, instance=profile)
+#         if form.is_valid:
+#             form.save()
+#             return redirect ('profile')
+#     else:
+#         form = UserProfileForm(instance=profile)
+
+
+
+#     return render(request, 'update_profile.html', {'form':form})
+
+
 @login_required
 def update_profile(request):
+    # Fetch the profile instance linked to the current user
     profile = request.user.userprofile
+    
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid:
-            form.save()
-            return redirect ('profile')
+        # Load data into both forms simultaneously
+        # This runs ONLY when the save button is clicked
+        u_form = UserForm(request.POST, instance=request.user)
+        p_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        
+        # Check validity for both (note the parentheses on is_valid())
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('update_profile')  # Redirect to the same page after saving
     else:
-        form = UserProfileForm(instance=profile)
+        # Pre-populate both forms with current database values
+        u_form = UserForm(instance=request.user)
+        p_form = UserProfileForm(instance=profile)
 
+    context = {
+        'u_form': u_form,
+        'p_form': p_form
+    }
 
-
-    return render(request, 'update_profile.html', {'form':form})
+    return render(request, 'update_profile.html', context)
 
 
 @login_required

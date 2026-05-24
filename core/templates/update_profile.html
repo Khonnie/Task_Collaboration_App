@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,13 +11,30 @@
 
 
 </head>
+
 <body>
-    <form action="{% url 'update_profile' %}" method="post">
+    <!-- <form action="{% url 'update_profile' %}" method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="button">Save Profile</button>
 
+    </form> -->
+    <div style="max-width: 600px; margin: 40px auto; padding: 20px 20px;
+                background-color: #c1d4e649; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <h4>Account Settings</h4>
+        {{ u_form.as_p }}
+
+        <h4>Profile Settings</h4>
+        {{ p_form.as_p }}
+
+        <button type="submit">Save Changes</button>
     </form>
-    
+    </div>
+
+
 </body>
+
 </html>
