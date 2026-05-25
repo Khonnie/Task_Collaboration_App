@@ -127,33 +127,97 @@ def delete_task(request, task_id):
 #     return render(request, 'update_profile.html', {'form':form})
 
 
+# @login_required
+# def update_profile(request):
+#     # Fetch the profile instance linked to the current user
+#     profile = request.user.userprofile
+    
+#     if request.method == 'POST':
+#         # Load data into both forms simultaneously
+#         # This runs ONLY when the save button is clicked
+#         u_form = UserForm(request.POST, instance=request.user)
+#         p_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        
+#         # Check validity for both (note the parentheses on is_valid())
+#         if u_form.is_valid() and p_form.is_valid():
+#             u_form.save()
+#             p_form.save()
+#             return redirect('update_profile')  # Redirect to the same page after saving
+#     else:
+#         # Pre-populate both forms with current database values
+#         u_form = UserForm(instance=request.user)
+#         p_form = UserProfileForm(instance=profile)
+
+#     context = {
+#         'u_form': u_form,
+#         'p_form': p_form
+#     }
+
+#     return render(request, 'update_profile.html', context)
+
+
 @login_required
 def update_profile(request):
-    # Fetch the profile instance linked to the current user
+
     profile = request.user.userprofile
-    
+
+    # TASKS CREATED BY LOGGED IN USER
+    my_tasks = Task.objects.filter(
+        created_by=request.user
+    )
+
+    # TASKS ASSIGNED TO LOGGED IN USER
+    assigned_tasks = Task.objects.filter(
+        assigned_to=request.user
+    )
+
+    users = User.objects.all()
+
     if request.method == 'POST':
-        # Load data into both forms simultaneously
-        # This runs ONLY when the save button is clicked
-        u_form = UserForm(request.POST, instance=request.user)
-        p_form = UserProfileForm(request.POST, request.FILES, instance=profile)
-        
-        # Check validity for both (note the parentheses on is_valid())
+
+        u_form = UserForm(
+            request.POST,
+            instance=request.user
+        )
+
+        p_form = UserProfileForm(
+            request.POST,
+            request.FILES,
+            instance=profile
+        )
+
         if u_form.is_valid() and p_form.is_valid():
+
             u_form.save()
             p_form.save()
-            return redirect('update_profile')  # Redirect to the same page after saving
+
+            return redirect('update_profile')
+
     else:
-        # Pre-populate both forms with current database values
+
         u_form = UserForm(instance=request.user)
+
         p_form = UserProfileForm(instance=profile)
 
     context = {
+
         'u_form': u_form,
-        'p_form': p_form
+        'p_form': p_form,
+
+        'my_tasks': my_tasks,
+        'assigned_tasks': assigned_tasks,
+
+        'my_tasks_count': my_tasks.count(),
+        'assigned_tasks_count': assigned_tasks.count(),
+
+        'users': users
     }
 
-    return render(request, 'update_profile.html', context)
+    return render(
+        request,
+        'update_profile.html',
+        context
+    )
 
 
 @login_required
