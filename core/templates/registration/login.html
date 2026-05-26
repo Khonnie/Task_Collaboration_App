@@ -7,21 +7,73 @@
 <body class="bg-light">
 
 <div class="container mt-5">
-    <div class="card mx-auto" style="max-width: 400px;">
+
+    <div class="card mx-auto shadow border-0 rounded-4 p-3"
+         style="max-width: 400px;">
+
         <div class="card-body">
 
-            <h4 class="text-center mb-3">Login</h4>
+            <div class="text-center mb-4">
+
+                <i class="bi bi-calendar-check display-5 text-primary"></i>
+
+                <h3 class="mt-2 fw-bold">
+                    TaskApp
+                </h3>
+
+                <p class="text-muted">
+                    Login to continue
+                </p>
+
+            </div>
+
+            <!-- LOGIN FORM -->
 
             <form method="POST">
+
                 {% csrf_token %}
 
                 {{ form.as_p }}
 
-                <button type="submit" class="btn btn-primary w-100">Login</button>
+                <button type="submit"
+                        class="btn btn-primary w-100 py-2">
+                    Login
+                </button>
+
             </form>
 
+            <!-- EXTRA LINKS -->
+
+            <div class="text-center mt-4">
+
+                <small class="text-muted">
+                    Don't have an account?
+                </small>
+
+                <br>
+
+                <a href="{% url 'signup' %}"
+                   class="text-decoration-none fw-semibold">
+                    Create Account
+                </a>
+
+            </div>
+
+            <!-- OPTIONAL -->
+
+            <div class="text-center mt-2">
+
+                <a href="#"
+                   class="text-muted text-decoration-none small">
+                    Forgot Password?
+                </a>
+
+            </div>
+
         </div>
+
     </div>
+
 </div>
 
 </body>

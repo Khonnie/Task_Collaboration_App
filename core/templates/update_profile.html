@@ -245,11 +245,11 @@
 
                     {% if user.userprofile.profile_picture %}
                         <img src="{{ user.userprofile.profile_picture.url }}"
-                             class="rounded-circle"
-                             style="width:110px;height:110px;object-fit:cover;">
+                             class="rounded-circle  border border-1 border-primary" 
+                             style="width:110px;height:110px;object-fit:contain;">
                     {% else %}
                         <img src="/media/default.png"
-                             class="rounded-circle"
+                             class="rounded-circle border border-1 border-primary p-1"
                              style="width:110px;height:110px;object-fit:cover;">
                     {% endif %}
 
@@ -286,10 +286,10 @@
                        <i class="bi bi-check2-square"></i> Assigned Tasks
                     </a>
 
-                    <a class="nav-link sidebar-link"
+                    <!-- <a class="nav-link sidebar-link"
                        data-section="social-section">
                        <i class="bi bi-share"></i> Social Links
-                    </a>
+                    </a> -->
 
                     <!-- LOGOUT -->
 
