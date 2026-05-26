@@ -501,6 +501,8 @@
             <!-- STATUS -->
 
             <div class="col-md-2">
+                
+                
 
                 <form method="POST"
                       action="{% url 'update_task' task.id %}">
@@ -541,6 +543,7 @@
             <!-- ASSIGN -->
 
             <div class="col-md-3">
+                {% if task.status != 'completed' %}
 
                 <form method="POST"
                       action="{% url 'assign_task' task.id %}">
@@ -566,6 +569,7 @@
                     </select>
 
                 </form>
+                {% endif %}
 
             </div>
 
