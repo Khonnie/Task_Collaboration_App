@@ -247,8 +247,8 @@
 
                     {% if user.userprofile.profile_picture %}
                         <img src="{{ user.userprofile.profile_picture.url }}"
-                             class="rounded-circle  border border-1 border-primary" 
-                             style="width:110px;height:110px;object-fit:contain;">
+                             class="rounded-circle  " 
+                             style="width:100px;height:100px;object-fit:contain; border:1px solid blue; padding:5px;">
                     {% else %}
                         <img src="/media/default.png"
                              class="rounded-circle border border-1 border-primary p-1"
@@ -504,47 +504,95 @@
 
             </div>
 
-            <!-- STATUS -->
+            
+ <!-- STATUS -->
+<div class="col-md-2">
 
-            <div class="col-md-2">
-                
-                
+    {% if request.user == task.created_by or user.is_superuser or request.user in task.assigned_to.all %}
 
-                <form method="POST"
-                      action="{% url 'update_task' task.id %}">
+        {% if task.status == 'completed' or task.status == 'rejected' %}
 
-                    {% csrf_token %}
+            {% if task.status == 'completed' %}
+                <span class="badge bg-primary">Completed</span>
+            {% elif task.status == 'rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+            {% endif %}
 
-                    <select name="status"
-                            class="form-select form-select-sm"
-                            onchange="this.form.submit()">
+        {% else %}
 
-                        <option value="pending"
-                            {% if task.status == 'pending' %}
-                                selected
-                            {% endif %}>
-                            Pending
-                        </option>
+            <form method="POST" action="{% url 'update_task' task.id %}" id="statusForm{{ task.id }}">
+                {% csrf_token %}
 
-                        <option value="completed"
-                            {% if task.status == 'completed' %}
-                                selected
-                            {% endif %}>
-                            Completed
-                        </option>
+                <select name="status"
+                        class="form-select form-select-sm"
+                        id="statusSelect{{ task.id }}">
 
-                        <option value="rejected"
-                            {% if task.status == 'rejected' %}
-                                selected
-                            {% endif %}>
-                            Rejected
-                        </option>
+                    <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>
+                        Pending
+                    </option>
+                    <option value="completed">
+                        Completed
+                    </option>
+                    <option value="rejected">
+                        Rejected
+                    </option>
 
-                    </select>
+                </select>
 
-                </form>
+                <button type="button"
+                        class="btn btn-sm btn-primary mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#statusModal{{ task.id }}">
+                    Update
+                </button>
+            </form>
 
+            <!-- Bootstrap Modal -->
+            <div class="modal fade" id="statusModal{{ task.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Status Change</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            Are you sure you want to update this task status?
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    onclick="document.getElementById('statusForm{{ task.id }}').submit();">
+                                Confirm
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
             </div>
+
+        {% endif %}
+
+    {% else %}
+
+        {% if task.status == 'pending' %}
+            <span class="badge bg-info text-white">Pending</span>
+        {% elif task.status == 'completed' %}
+            <span class="badge bg-primary">Completed</span>
+        {% elif task.status == 'rejected' %}
+            <span class="badge bg-danger">Rejected</span>
+        {% endif %}
+
+    {% endif %}
+
+</div>
+
 
             <!-- ASSIGN -->
 
@@ -583,7 +631,8 @@
 
             <div class="col-md-3">
 
-                <button class="btn btn-sm btn-info"
+                <button class="btn btn-sm" style="background:rgb(0, 0, 255);
+            color:white; font-weight:700;"
                         onclick="toggleEdit({{ task.id }})">
 
                     <i class="bi bi-pencil-square"></i>
@@ -609,6 +658,7 @@
         </div>
 
         <!-- EDIT FORM -->
+         {% if task.status != 'completed' and task.status != 'rejected' %}
 
         <div id="edit-form-{{ task.id }}"
              class="row p-2"
@@ -632,6 +682,13 @@
             </form>
 
         </div>
+        {% else %}
+        <div id="edit-form-{{ task.id }}" class="row p-2" style="display:none;">
+            <div class="alert alert-info mb-0">
+                Completed tasks cannot be edited.
+            </div>
+        </div>
+        {% endif %}
 
         {% empty %}
 
@@ -652,44 +709,6 @@
 </div>
 
                 <!-- ASSIGNED TASKS -->
-                <!-- <div id="assigned-section"
-                     class="content-section d-none">
-
-                    <h2 class="panel-heading">
-                        Assigned Tasks
-                    </h2>
-
-                    {% for task in assigned_tasks %}
-
-                    <div class="task-card">
-
-                        <h5>{{ task.title }}</h5>
-
-                        <p>
-                            {{ task.description|truncatewords:20 }}
-                        </p>
-
-                        <div class="task-footer">
-
-                            <span class="badge bg-success">
-                                Assigned
-                            </span>
-
-                            <small>
-                                Due: {{ task.due_date }}
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                    {% empty %}
-
-                    <p>No assigned tasks.</p>
-
-                    {% endfor %}
-
-                </div> -->
 
 <div id="assigned-section"
      class="content-section d-none">
@@ -741,44 +760,93 @@
             </div>
 
             <!-- STATUS -->
+<div class="col-md-2">
 
-            <div class="col-md-3">
+    {% if request.user == task.created_by or user.is_superuser or request.user in task.assigned_to.all %}
 
-                <form method="POST"
-                      action="{% url 'update_task' task.id %}">
+        {% if task.status == 'completed' or task.status == 'rejected' %}
 
-                    {% csrf_token %}
+            {% if task.status == 'completed' %}
+                <span class="badge bg-primary">Completed</span>
+            {% elif task.status == 'rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+            {% endif %}
 
-                    <select name="status"
-                            class="form-select form-select-sm"
-                            onchange="this.form.submit()">
+        {% else %}
 
-                        <option value="pending"
-                            {% if task.status == 'pending' %}
-                                selected
-                            {% endif %}>
-                            Pending
-                        </option>
+            <form method="POST" action="{% url 'update_task' task.id %}" id="statusForm{{ task.id }}">
+                {% csrf_token %}
 
-                        <option value="completed"
-                            {% if task.status == 'completed' %}
-                                selected
-                            {% endif %}>
-                            Completed
-                        </option>
+                <select name="status"
+                        class="form-select form-select-sm"
+                        id="statusSelect{{ task.id }}">
 
-                        <option value="rejected"
-                            {% if task.status == 'rejected' %}
-                                selected
-                            {% endif %}>
-                            Rejected
-                        </option>
+                    <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>
+                        Pending
+                    </option>
+                    <option value="completed">
+                        Completed
+                    </option>
+                    <option value="rejected">
+                        Rejected
+                    </option>
 
-                    </select>
+                </select>
 
-                </form>
+                <button type="button"
+                        class="btn btn-sm btn-primary mt-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#statusModal{{ task.id }}">
+                    Update
+                </button>
+            </form>
 
+            <!-- Bootstrap Modal -->
+            <div class="modal fade" id="statusModal{{ task.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Status Change</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            Are you sure you want to update this task status?
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    onclick="document.getElementById('statusForm{{ task.id }}').submit();">
+                                Confirm
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
             </div>
+
+        {% endif %}
+
+    {% else %}
+
+        {% if task.status == 'pending' %}
+            <span class="badge bg-warning text-dark">Pending</span>
+        {% elif task.status == 'completed' %}
+            <span class="badge bg-success">Completed</span>
+        {% elif task.status == 'rejected' %}
+            <span class="badge bg-danger">Rejected</span>
+        {% endif %}
+
+    {% endif %}
+
+</div>
+
 
             <!-- CREATED BY -->
 
@@ -884,7 +952,18 @@
 
 </footer>
 
-    <!-- JAVASCRIPT -->
+    
+
+    <!-- JS -->
+<script>
+function toggleEdit(taskId) {
+    const form = document.getElementById(`edit-form-${taskId}`);
+    form.style.display = form.style.display === "none" ? "block" : "none";
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
 
     <script>
 

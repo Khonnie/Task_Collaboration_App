@@ -12,7 +12,7 @@ def task_list(request):
     # Show/filter only tasks belonging to the current user.
 
     # tasks = Task.objects.filter(user=request.user)
-    tasks = Task.objects.all()
+    tasks = Task.objects.all().order_by('-created_at')
     
     users = User.objects.all() 
 
@@ -135,7 +135,7 @@ def assign_task(request, task_id):
                 task.assigned_to.add(user)
                 task.save()
 
-                print("ASSIGNED SUCCESS")
+                
 
             except User.DoesNotExist:
                 print("USER NOT FOUND")
@@ -171,18 +171,21 @@ def update_profile(request):
 
     profile = request.user.userprofile
 
-    # TASKS CREATED BY LOGGED IN USER
+    # getting tasks created by the logged in user from the DB
     my_tasks = Task.objects.filter(
         created_by=request.user
     )
 
-    # TASKS ASSIGNED TO LOGGED IN USER
+    # getting tasks assigned to the logged in user from the DB
     assigned_tasks = Task.objects.filter(
         assigned_to=request.user
     )
 
+    # getting all users from the DB to show in the dropdown for assigning tasks
     users = User.objects.all()
 
+
+# processing form submission for updating user profile
     if request.method == 'POST':
 
         u_form = UserForm(
